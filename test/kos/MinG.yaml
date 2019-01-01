@@ -6,6 +6,8 @@ build:
     - file:name1:/etc/filepath
     - file:appjar:/application/app/build/app.jar
     - dir:name3:/application/target/resources/
+  test:
+    - gradle test
   script:
     - gradle build
 

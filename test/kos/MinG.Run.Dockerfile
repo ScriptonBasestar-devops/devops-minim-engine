@@ -1,2 +1,1 @@
-FROM alpine:latest
-
+FROM openjdk:8-jre-alpine
