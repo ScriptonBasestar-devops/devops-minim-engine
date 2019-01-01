@@ -1,0 +1,4 @@
+# build minimage docker
+
+golang
+

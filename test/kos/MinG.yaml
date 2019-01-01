@@ -1,0 +1,19 @@
+build:
+  root_path: /application
+  dockerfile: MinG.Build.Dockerfile
+  target:
+    - (file/dir):name:path
+    - file:name1:/etc/filepath
+    - file:appjar:/application/app/build/app.jar
+    - dir:name3:/application/target/resources/
+  script:
+    - gradle build
+
+deploy:
+  root_path: /application
+  dockerfile: MinG.Run.Dockerfile
+  target:
+    - file:appjar:/application/app.jar
+  script:
+    # - 'java -jar /application/app.jar'
+    - 'java -jar app.jar'
