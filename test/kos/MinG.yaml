@@ -13,7 +13,7 @@ build:
 
 deploy:
   root_path: /application
-  dockerfile: MinG.Run.Dockerfile
+  dockerfile: MinG.Deploy.Dockerfile
   target:
     - file:appjar:/application/app.jar
   script:
