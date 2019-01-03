@@ -115,6 +115,9 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
+# ====== custom go ignore ======
+pkg/
+
 # ====== custom jetbrains ======
 .idea/
 *.iml

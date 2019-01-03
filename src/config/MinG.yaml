@@ -1,0 +1,43 @@
+vcs:
+  name: git
+  repo: https://github.com/cemacs-tv/devops-MinG.git
+  branch: master
+  command:
+    - 'git fetch origin'
+    - 'git reset --hard origin/master'
+#    - 'git reset --hard HEAD'
+#    - 'git pull'
+
+build:
+  # 아래 명령이 실행될 root directory
+  root_path: /application
+  dockerbuild: MinG.Build.Dockerfile
+  # 이미지에 소스코드 및 파일 추가
+  # copy와 volume이 순서대로 둘 다 동작하기 때문에 충돌발생가능. 한가지만 사용하는게 좋지만
+  # 그런건 알아서 처리
+  copy_to:
+    #- (file/dir):name:path
+    - file:name1:/etc/filepath
+  volume_to:
+    - dir:name3:/application/target/resources/
+  test:
+    - gradle test
+  script:
+    - 'gradle clean'
+    - 'gradle build'
+  extract_from:
+    #    - 'name:path'
+    - 'file:appjar:./app/build/app.jar'
+
+deploy:
+  root_path: /application
+  #별다른 설정이 없는 경우 아래처럼 이미지명을 그대로 입력해서 사용 가능
+  #  dockerbuild: MinG.Deploy.Dockerfile
+  dockerimage: openjdk:8-jre-alpine
+  inject_to:
+    #    - name:path
+    - appjar:/application/app.jar
+  script:
+    - 'java -jar app.jar'
+  push_to:
+    - 'reponame'
