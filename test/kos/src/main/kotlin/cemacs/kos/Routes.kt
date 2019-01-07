@@ -3,12 +3,11 @@ package cemacs.kos
 import com.samskivert.mustache.Mustache
 import org.springframework.context.MessageSource
 import org.springframework.core.io.ClassPathResource
-import org.springframework.http.MediaType.*
+import org.springframework.http.MediaType.TEXT_HTML
 import org.springframework.web.reactive.function.server.RenderingResponse
 import org.springframework.web.reactive.function.server.router
 import reactor.core.publisher.toMono
 import java.util.*
-
 
 class Routes(private val userHandler: UserHandler,
 			 private val messageSource: MessageSource) {
@@ -26,7 +25,7 @@ class Routes(private val userHandler: UserHandler,
 		resources("/**", ClassPathResource("static/"))
 	}.filter { request, next ->
 		next.handle(request).flatMap {
-			if (it is RenderingResponse) RenderingResponse.from(it).modelAttributes(attributes(request.locale(), messageSource)).build() else it.toMono()
+			if (it is RenderingResponse) RenderingResponse.from(it).modelAttributes(attributes(Locale.KOREA, messageSource)).build() else it.toMono()
 		}
 	}
 

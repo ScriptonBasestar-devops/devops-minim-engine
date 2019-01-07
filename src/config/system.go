@@ -1,11 +1,12 @@
 package config
 
+//init from db..?
 type SystemConfig struct {
 	Source struct {
-		Path string `yaml:"path"`
-	} `yaml:"source"`
+		Path string
+	}
 	Project struct {
-		Name string `yaml: "name"`
-		RootPath string `yaml: "root_path"`
-	} `yaml: "project"`
+		Name     string
+		RootPath string
+	}
 }

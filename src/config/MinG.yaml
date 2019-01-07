@@ -2,11 +2,6 @@ vcs:
   name: git
   repo: https://github.com/cemacs-tv/devops-MinG.git
   branch: master
-  command:
-    - 'git fetch origin'
-    - 'git reset --hard origin/master'
-#    - 'git reset --hard HEAD'
-#    - 'git pull'
 
 build:
   # 아래 명령이 실행될 root directory

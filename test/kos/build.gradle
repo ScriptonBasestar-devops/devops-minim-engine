@@ -51,7 +51,7 @@ dependencies {
 //	}
 //	compile('org.springframework.boot:spring-boot-starter-thymeleaf')
 	compile("com.samskivert:jmustache")
-	compile("io.projectreactor.ipc:reactor-netty")
+//	compile("io.projectreactor.ipc:reactor-netty")
 
 	compile("org.slf4j:slf4j-api")
 	compile("ch.qos.logback:logback-classic")

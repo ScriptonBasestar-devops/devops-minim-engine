@@ -1,21 +1,60 @@
-build:
-  root_path: /application
-  dockerfile: MinG.Build.Dockerfile
-  target:
-    - (file/dir):name:path
-    - file:name1:/etc/filepath
-    - file:appjar:/application/app/build/app.jar
-    - dir:name3:/application/target/resources/
-  test:
-    - gradle test
-  script:
-    - gradle build
+volume_cache:
+  npm: ~/app/node_modules
 
-deploy:
-  root_path: /application
-  dockerfile: MinG.Deploy.Dockerfile
-  target:
-    - file:appjar:/application/app.jar
-  script:
-    # - 'java -jar /application/app.jar'
-    - 'java -jar app.jar'
+secret:
+  path: ~/.MinG/kos-prd.env
+
+volume_tmp:
+  pass_jar: /tmp
+
+phase:
+  # 2 depth는 이름 상관없음 repo, git
+  repo:
+    #    path: {volume name}
+    path: source
+    branch: master
+    url: https://githib.com/cemacs-tv/devops-MinG.git
+    reset: # if not defined use default
+      command:
+        - git fetch origin
+        - git clean -dfx
+        - git
+  build_jar:
+    prev: 0
+    build:
+      arg:
+        - JDK_VERSION=1.8
+        - GRADLE_VERSION=4.9
+      dockerfile: MinG.Build.Dockerfile
+    work_root: /application
+    env:
+      - USER_HOME=/home/ubuntu
+    volume:
+      - source:/application
+      #      - {name}:{mount_path:if not defined use default}
+      #      - m2:$USER_HOME/.m2
+      - m2
+    run:
+      #      copy_in: 여기서는 볼륭으로 사용해서 별도 설정없음
+      command:
+        - gradle clean
+        - gradle yarn
+        - gradle build
+      copy_out:
+        - /application/**/build/*.jar:pass_jar
+  deploy_img:
+    prev: build_jar
+    build:
+      dockerimage: openjdk:8-alpine
+    work_root: /application
+    env:
+      - USER_HOME=/home/ubuntu
+      - SPRING_PROVILES_ACTIVE=prd
+      - DB0_HOST=localhost
+      - DB0_USERNAME=enc("mysql_username")
+      - DB0_PASSWORD=enc("mysql_password")
+      - REDIS_SECRET=enc("redis_secret")
+    run:
+      copy_in: pass_jar:/tmp/app.jar:/application
+      command:
+        - java -jar /application/app.jar
