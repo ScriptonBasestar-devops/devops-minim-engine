@@ -29,5 +29,4 @@ func TestBuild(t *testing.T) {
 		//fmt.Printf("ID: %s, Name: %s\n", image.ID[:10], strings.Split(image.RepoDigests[0], ":")[0])
 		fmt.Printf("ID: %s, Name: %s\n", image.ID[:10], image.RepoTags)
 	}
-	// Output: MOOOO!
 }
