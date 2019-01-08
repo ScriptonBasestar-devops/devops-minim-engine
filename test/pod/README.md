@@ -29,7 +29,7 @@ docker$ python -m site
 
 ## start container
 host$ docker run -it --rm \
--v py37:/usr/local/lib/python3.7
+-v py37:/usr/local/lib/python3.7 \
 python:3.7-stretch bash
 
 docker$ mkdir /app
@@ -61,8 +61,3 @@ host$ docker build -f MinG.Deploy.Dockerfile -t test2 .
 ## run
 host$ docker run --rm -d -p 8000:8000 test2
 ```
-
-
-## 참고
-
-https://github.com/sdeleuze/spring-kotlin-functional.git 
