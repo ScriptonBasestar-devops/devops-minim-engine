@@ -1,60 +1,52 @@
-volume_cache:
-  npm: ~/app/node_modules
+cache:
+  #  grp:
+  #  usr:
+  prj:
+    m2: ${CONTAINER:USER_HOME}/.m2
+    gradle: ${CONTAINER:USER_HOME}/.gradle
+    npm: ${CONTAINER:WORK_ROOT}/app/node_modules
+  tmp:
+    pass_package: # no default
 
-secret:
-  path: ~/.MinG/kos-prd.env
-
-volume_tmp:
-  pass_jar: /tmp
-
-phase:
-  # 2 depth는 이름 상관없음 repo, git
-  repo:
-    #    path: {volume name}
-    path: source
-    branch: master
-    url: https://githib.com/cemacs-tv/devops-MinG.git
-    reset: # if not defined use default
-      command:
-        - git fetch origin
-        - git clean -dfx
-        - git
-  build_jar:
-    prev: 0
-    build:
-      arg:
-        - JDK_VERSION=1.8
-        - GRADLE_VERSION=4.9
-      dockerfile: MinG.Build.Dockerfile
-    work_root: /application
-    env:
-      - USER_HOME=/home/ubuntu
-    volume:
-      - source:/application
-      #      - {name}:{mount_path:if not defined use default}
-      #      - m2:$USER_HOME/.m2
-      - m2
-    run:
-      #      copy_in: 여기서는 볼륭으로 사용해서 별도 설정없음
+build:
+  arg:
+    - IMAGE_NAME=gradle
+    - IMAGE_VERSION=5.0.0-jdk8
+  dockerfile: MinG.Build.Dockerfile
+  after_build: remove # remove(--rm) / preserve (이름지정 ${project_name}-kos_backend
+  env:
+    - JDK_VERSION=1.8
+    - GRADLE_VERSION=5.0
+  volume: # - {name}:{mount_path:if not defined use default}
+    - m2
+    - gradle
+    - npm
+  exec:
+    - copy_in: credential:gradle.properteis:${USER_HOME}/.gradle/gradle.properties
+    - work_root: /application
       command:
         - gradle clean
         - gradle yarn
         - gradle build
-      copy_out:
-        - /application/**/build/*.jar:pass_jar
-  deploy_img:
-    prev: build_jar
-    build:
-      dockerimage: openjdk:8-alpine
-    work_root: /application
-    env:
-      - USER_HOME=/home/ubuntu
-      - SPRING_PROVILES_ACTIVE=prd
-      - DB0_HOST=localhost
-      - DB0_USERNAME=enc("mysql_username")
-      - DB0_PASSWORD=enc("mysql_password")
-      - REDIS_SECRET=enc("redis_secret")
-    run:
-      copy_in: pass_jar:/tmp/app.jar:/application
-      command:
-        - java -jar /application/app.jar
+    - copy_out:
+  extract: # 압축해서 꺼내가 ${out파일 이름}:${꺼내갈 파일경로}
+    - backend_pkg:/application/app/build/libs/backend.jar
+
+deploy:
+  dockerfile: MinG.Deploy.Dockerfile
+  arg:
+    - JDK_VERSION=1.8
+    - GRADLE_VERSION=5.0
+    - APP_VERSION=20190111
+  inject: # ADD
+    - backend_pkg:/application/app.jar
+    - logger_pkg:/logger
+  entrypoint: ["java","-Djava.security.egd=file:/dev/./urandom","-jar","/app.jar"]
+  push_to:
+    docker:
+      # default=hub.docker.com
+      url: hub.docker.com
+      name: scriptonbasestar/deploy_backend:20190111
+      # aws
+      #url: awssssssssss
+      #name: awssssss/deploy_backend:20190111

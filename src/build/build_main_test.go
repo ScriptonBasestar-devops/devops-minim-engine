@@ -236,7 +236,8 @@ func ExampleImageBuild() {
 	ctx := context.Background()
 	cli := newClient()
 
-	fmt.Println("============")
+	//cli.ImageCreate(ctx, "", types.ImageCreateOptions{})
+//	fmt.Println("============")
 	_, err := cli.ImageBuild(ctx, nil, types.ImageBuildOptions{
 		Dockerfile: path.Join("./", "MinG.Build.Dockerfile"),
 		PullParent: true,
