@@ -1,36 +1,39 @@
+meta:
+  project_name: "kos"
+  project_version: v0.1
+
 cache:
-  #  grp:
-  #  usr:
   prj:
-    m2: ${CONTAINER:USER_HOME}/.m2
-    gradle: ${CONTAINER:USER_HOME}/.gradle
-    npm: ${CONTAINER:WORK_ROOT}/app/node_modules
+    m2: ${USER_HOME}/.m2
+    gradle: ${USER_HOME}/.gradle
+    npm: ${WORK_ROOT}/app/node_modules
   tmp:
-    pass_package: # no default
+    pass_package:
 
 build:
+  dockerfile: MinG.Build.Dockerfile
   arg:
     - IMAGE_NAME=gradle
     - IMAGE_VERSION=5.0.0-jdk8
-  dockerfile: MinG.Build.Dockerfile
-  after_build: remove # remove(--rm) / preserve (이름지정 ${project_name}-kos_backend
+  lifecycle: preserve
   env:
     - JDK_VERSION=1.8
     - GRADLE_VERSION=5.0
-  volume: # - {name}:{mount_path:if not defined use default}
+  volume:
     - m2
     - gradle
     - npm
   exec:
-    - copy_in: credential:gradle.properteis:${USER_HOME}/.gradle/gradle.properties
-    - work_root: /application
-      command:
-        - gradle clean
-        - gradle yarn
-        - gradle build
-    - copy_out:
-  extract: # 압축해서 꺼내가 ${out파일 이름}:${꺼내갈 파일경로}
-    - backend_pkg:/application/app/build/libs/backend.jar
+    - action: copy_in
+      value: ["volume, credential, gradle.properteis, ${USER_HOME}/.gradle/gradle.properties"]
+    - action: command
+      value: ["gradle clean"]
+    - action: command
+      value: ["gradle yarn", "gradle build"]
+    - action: copy_out
+      value: ["volume, credential, ${USER_HOME}/.gradle/gradle.properties, gradle.properties"]
+  extract:
+    kos_pkg: /application/app/build/libs/app.jar
 
 deploy:
   dockerfile: MinG.Deploy.Dockerfile
@@ -39,14 +42,9 @@ deploy:
     - GRADLE_VERSION=5.0
     - APP_VERSION=20190111
   inject: # ADD
-    - backend_pkg:/application/app.jar
-    - logger_pkg:/logger
-  entrypoint: ["java","-Djava.security.egd=file:/dev/./urandom","-jar","/app.jar"]
+    kos_pkg: /application/app.jar
+  entrypoint: ["java","-Djava.security.egd=file:/dev/./urandom","-jar","/application/app.jar"]
   push_to:
-    docker:
-      # default=hub.docker.com
+    - target: docker
       url: hub.docker.com
-      name: scriptonbasestar/deploy_backend:20190111
-      # aws
-      #url: awssssssssss
-      #name: awssssss/deploy_backend:20190111
+      name: scriptonbasestar/deploy_kos:20190111

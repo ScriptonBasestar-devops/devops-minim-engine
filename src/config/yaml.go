@@ -1,52 +1,44 @@
 package config
 
 import (
-	"gopkg.in/validator.v2"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"util"
 )
 
-//TODO 나중에 enum 형태로 수정
-//type vcsType int
-//const (
-//	git vcsType = 0
-//	hg
-//	svn
-//)
-//
-//var VcsType = [...]string{
-//	"git",
-//	"hg",
-//	"svn",
-//}
-
-//TODO more validation
 type YamlConfig struct {
-	Vcs struct {
-		//Name    vcsType  `yaml:"name"`
-		Name    string   `yaml:"name" validate:"nonzero,regexp=(git|hg|svn)"`
-		Repo    string   `yaml:"repo"`
-		Branch  string   `yaml:"branch" validate:"nonzero"`
-		Command []string `yaml:"command"`
-	} `yaml:"vcs"`
+	Meta struct {
+		ProjectName    string `yaml:"project_name"`
+		ProjectVersion string `yaml:"project_version"`
+	} `yaml:"meta"`
+	Cache struct {
+		Group   yaml.MapSlice `yaml:"grp"`
+		User    yaml.MapSlice `yaml:"usr"`
+		Project yaml.MapSlice `yaml:"prj"`
+		Temp    yaml.MapSlice `yaml:"tmp"`
+	} `yaml:"cache"`
 	Build struct {
-		RootPath    string   `yaml:"root_path" validate:"nonzero"`
-		Dockerbuild string   `yaml:"dockerbuild"`
-		Dockerimage string   `yaml:"dockerimage"`
-		CopyTo      []string `yaml:"copy_to"`
-		VolumeTo    []string `yaml:"volume_to"`
-		ExtractFrom []string `yaml:"extract_from"`
-		Test        []string `yaml:"test"`
-		Script      []string `yaml:"script"`
+		Dockerfile  string   `yaml:"dockerfile"`
+		Arg         []string `yaml:"arg"`
+		ImageStatus string   `yaml:"image_status"`
+		Env         []string `yaml:"env"`
+		Volume      []string `yaml:"volume"`
+		Exec        []struct {
+			Act   string   `yaml:"act"`
+			Value []string `yaml:"value"`
+		} `yaml:"exec"`
+		Extract yaml.MapSlice `yaml:"extract"`
 	} `yaml:"build"`
 	Deploy struct {
-		RootPath    string   `yaml:"root_path" validate:"nonzero"`
-		Dockerbuild string   `yaml:"dockerbuild"`
-		Dockerimage string   `yaml:"dockerimage"`
-		CopyTo      []string `yaml:"copy_to"`
-		Test        []string `yaml:"test"`
-		Script      []string `yaml:"script"`
+		Dockerfile string        `yaml:"dockerfile"`
+		Arg        []string      `yaml:"arg"`
+		Inject     yaml.MapSlice `yaml:"inject"`
+		Entrypoint []string      `yaml:"entrypoint"`
+		PushTo     []struct {
+			Target string `yaml:"target"`
+			Url    string `yaml:"url"`
+			Name   string `yaml:"name"`
+		} `yaml:"push_to"`
 	} `yaml:"deploy"`
 }
 
@@ -55,11 +47,11 @@ func (c *YamlConfig) ReadConfig(filepath string) *YamlConfig {
 	util.OMG(err)
 	err = yaml.Unmarshal([]byte(data), c)
 	util.OMG(err)
-	c.validate()
+	//c.validate()
 	return c
 }
 
-func (c *YamlConfig) validate() {
-	err := validator.Validate(*c)
-	panic(err)
-}
+//func (c *YamlConfig) validate() {
+//	err := validator.Validate(*c)
+//	panic(err)
+//}

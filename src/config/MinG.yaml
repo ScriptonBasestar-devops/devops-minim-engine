@@ -1,38 +1,59 @@
-vcs:
-  name: git
-  repo: https://github.com/cemacs-tv/devops-MinG.git
-  branch: master
+meta:
+  project_name: "devops-MinG-engine"
+  project_version: v0.2
+
+cache:
+  grp:
+    web_env:
+  usr:
+    ce_env:
+  prj:
+    m2: ${USER_HOME}/.m2
+    gradle: ${USER_HOME}/.gradle
+    npm: ${WORK_ROOT}/app/node_modules
+  tmp:
+    pass_package: # no default
 
 build:
-  # 아래 명령이 실행될 root directory
-  root_path: /application
-  dockerbuild: MinG.Build.Dockerfile
-  # 이미지에 소스코드 및 파일 추가
-  # copy와 volume이 순서대로 둘 다 동작하기 때문에 충돌발생가능. 한가지만 사용하는게 좋지만
-  # 그런건 알아서 처리
-  copy_to:
-    #- (file/dir):name:path
-    - file:name1:/etc/filepath
-  volume_to:
-    - dir:name3:/application/target/resources/
-  test:
-    - gradle test
-  script:
-    - 'gradle clean'
-    - 'gradle build'
-  extract_from:
-    #    - 'name:path'
-    - 'file:appjar:./app/build/app.jar'
+  dockerfile: MinG.Build.Dockerfile
+  arg:
+    - IMAGE_NAME=gradle
+    - IMAGE_VERSION=5.0.0-jdk8
+  # every_build, remove(default, --rm), preserve ... 등등 정해서
+  # 이미지 이름 ${project_name}
+  lifecycle: remove # remove(--rm) / preserve
+  env:
+    - JDK_VERSION=1.8
+    - GRADLE_VERSION=5.0
+  volume: # - {name}:{mount_path:if not defined use default}
+    - m2
+    - gradle
+    - npm
+  exec:
+    - action: copy_in
+      value: ["volume, credential, gradle.properteis, ${USER_HOME}/.gradle/gradle.properties"]
+    - action: command
+      value: ["gradle clean"]
+    - action: command
+      value: ["gradle yarn", "gradle build"]
+    - action: copy_out
+      value: ["volume, credential, ${USER_HOME}/.gradle/gradle.properties, gradle.properties"]
+  extract:
+    kos_pkg: /application/app/build/libs/app.jar
 
 deploy:
-  root_path: /application
-  #별다른 설정이 없는 경우 아래처럼 이미지명을 그대로 입력해서 사용 가능
-  #  dockerbuild: MinG.Deploy.Dockerfile
-  dockerimage: openjdk:8-jre-alpine
-  inject_to:
-    #    - name:path
-    - appjar:/application/app.jar
-  script:
-    - 'java -jar app.jar'
+  dockerfile: MinG.Deploy.Dockerfile
+  arg:
+    - JDK_VERSION=1.8
+    - GRADLE_VERSION=5.0
+    - APP_VERSION=20190111
+  inject: # ADD
+    kos_pkg: /application/app.jar
+  entrypoint: ["java","-Djava.security.egd=file:/dev/./urandom","-jar","/app.jar"]
   push_to:
-    - 'reponame'
+    - target: dockerhub
+      url: hub.docker.com
+      name: scriptonbasestar/deploy_kos:20190111
+#    - target: aws
+#      url: awssssssssss
+#      name: awssssss/deploy_backend:20190111
