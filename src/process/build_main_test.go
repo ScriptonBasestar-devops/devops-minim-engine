@@ -1,4 +1,4 @@
-package build_test
+package process_test
 
 import (
 	"fmt"
@@ -6,11 +6,13 @@ import (
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/filters"
 	"github.com/docker/docker/client"
+	"github.com/docker/docker/pkg/archive"
 	"golang.org/x/net/context"
 	"io"
 	"io/ioutil"
 	"os"
 	"path"
+	"prepare"
 	"testing"
 	"util"
 )
@@ -22,7 +24,7 @@ func newClient() *client.Client {
 }
 
 // ==================== image use ====================
-func TestExampleImagePull(t *testing.T) {
+func TestImagePull(t *testing.T) {
 	fmt.Println("======s TestExampleImagePull s======")
 	ctx := context.Background()
 	cli := newClient()
@@ -47,7 +49,9 @@ func TestContainerStart(t *testing.T) {
 		Image: "alpine",
 		Cmd:   []string{"echo", "hello world in container"},
 		//Tty:   true,
-	}, nil, nil, "")
+	}, &container.HostConfig{
+		//AutoRemove: true,
+	}, nil, "")
 	util.OMG(err)
 
 	fmt.Println("container start")
@@ -71,6 +75,9 @@ func TestContainerStart(t *testing.T) {
 	fmt.Println("======s body s======")
 	_, err = io.Copy(os.Stdout, out)
 	fmt.Println("======e body e======")
+	util.OMG(err)
+
+	err = cli.ContainerRemove(ctx, resp.ID, types.ContainerRemoveOptions{})
 	util.OMG(err)
 
 	fmt.Println("======e TestContainerStart e======")
@@ -237,7 +244,7 @@ func ExampleImageBuild() {
 	cli := newClient()
 
 	//cli.ImageCreate(ctx, "", types.ImageCreateOptions{})
-//	fmt.Println("============")
+	//	fmt.Println("============")
 	_, err := cli.ImageBuild(ctx, nil, types.ImageBuildOptions{
 		Dockerfile: path.Join("./", "MinG.Build.Dockerfile"),
 		PullParent: true,
@@ -248,4 +255,30 @@ func ExampleImageBuild() {
 	util.OMG(err)
 	fmt.Println("kkk")
 	// Output: kkk
+}
+
+func TestMainList(t *testing.T) {
+	//func ExampleDocker() {
+	fmt.Println("==================")
+	fmt.Println("start Example Docker")
+	cli, err := client.NewClientWithOpts(client.WithVersion("1.39"), client.WithScheme("http"))
+	util.OMG(err)
+
+	containers, err := cli.ContainerList(context.Background(), types.ContainerListOptions{})
+
+	for _, container := range containers {
+		fmt.Printf("%s %s\n", container.ID[:10], container.Image)
+	}
+
+	images, err := cli.ImageList(context.Background(), types.ImageListOptions{})
+	util.OMG(err)
+	for _, image := range images {
+		//fmt.Println(image)
+		//fmt.Printf("ID: %s, Name: %s\n", image.ID[:10], strings.Split(image.RepoDigests[0], ":")[0])
+		fmt.Printf("ID: %s, Name: %s\n", image.ID[:10], image.RepoTags)
+	}
+}
+
+func TestImgaePrepare(t *testing.T) {
+	process.Build()
 }

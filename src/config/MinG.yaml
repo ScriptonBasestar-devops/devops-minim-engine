@@ -1,59 +1,108 @@
 meta:
-  project_name: "devops-MinG-engine"
-  project_version: v0.2
+  project_name: kos
+  project_version: v0.1
 
 cache:
-  grp:
-    web_env:
-  usr:
-    ce_env:
   prj:
+#    source_root: ${WORK_ROOT} # 기본값 현재 소스코드 리포는 1개
     m2: ${USER_HOME}/.m2
     gradle: ${USER_HOME}/.gradle
     npm: ${WORK_ROOT}/app/node_modules
+    credential: ${USER_HOME}/crednetial
   tmp:
-    pass_package: # no default
+    pass_package:
+
+box:
+  gradle5:
+    dockerfile: MinG.Build.Dockerfile
+    work_root: /application
+    context: ./test/kos
+    add:
+      - copy_in:
+          source: source_root
+          from: .
+          to: ./test/kos/.
+    args:
+      - IMAGE_NAME=gradle
+      - IMAGE_VERSION=5.0.0-jdk8
+    lifecycle: preserve # preserve보관/ each매번재생성
+  maven:
+    dockerimage: maven:3-jdk8-alpine
+    lifecycle: preserve
+  springboot:
+    dockerfile: MinG.Deploy.Dockerfil
+    context: ./test/kos
+    args:
+      - JDK_VERSION=1.8
+      - GRADLE_VERSION=5.0
+      - APP_VERSION=20190111
+    lifecycle: preserve
+  springboot2:
+    dockerrepo: https://github.com/cemacs/ming-box.git # 세부경로 지정가능
+    path: /springboot
+    branch: master
+    rev: HEAD
+    lifecycle: preserve
 
 build:
-  dockerfile: MinG.Build.Dockerfile
-  arg:
-    - IMAGE_NAME=gradle
-    - IMAGE_VERSION=5.0.0-jdk8
-  # every_build, remove(default, --rm), preserve ... 등등 정해서
-  # 이미지 이름 ${project_name}
-  lifecycle: remove # remove(--rm) / preserve
-  env:
+  #  gradle_build:
+  dockerimage: gradle5
+#  work_root: /application
+  work_root: ${WORK_ROOT}
+  envs:
     - JDK_VERSION=1.8
     - GRADLE_VERSION=5.0
-  volume: # - {name}:{mount_path:if not defined use default}
+  volumes:
     - m2
     - gradle
     - npm
   exec:
-    - action: copy_in
-      value: ["volume, credential, gradle.properteis, ${USER_HOME}/.gradle/gradle.properties"]
-    - action: command
-      value: ["gradle clean"]
-    - action: command
-      value: ["gradle yarn", "gradle build"]
-    - action: copy_out
-      value: ["volume, credential, ${USER_HOME}/.gradle/gradle.properties, gradle.properties"]
-  extract:
-    kos_pkg: /application/app/build/libs/app.jar
+    - copy_in:
+        source: credential
+        from: gradle.properties
+        to: ${USER_HOME}/.gradle/gradle.properties
+    - command:  ["gradle", "clean"]
+    - command:  ["gradle", "yarn"]
+    - command:  ["tar", "cvpzf", "node_modules.tar.gz", "${WORK_ROOT}/app/node_modules"]
+    - copy_out:
+        source: pass_package
+        from: /application/app/node_nodules
+        to: /node_modules
+    - command: ["gradle", "build"]
+    - command: ["gradle", "test"]
+    - copy_out:
+        source: pass_package
+        from: /application/app/build/app.jar
+        to: /app.jar
+      # immutable
+    - snap_out:
+        kos_pkg: /application/app/build/libs/app.jar
 
-deploy:
-  dockerfile: MinG.Deploy.Dockerfile
-  arg:
-    - JDK_VERSION=1.8
-    - GRADLE_VERSION=5.0
-    - APP_VERSION=20190111
-  inject: # ADD
-    kos_pkg: /application/app.jar
-  entrypoint: ["java","-Djava.security.egd=file:/dev/./urandom","-jar","/app.jar"]
-  push_to:
-    - target: dockerhub
-      url: hub.docker.com
-      name: scriptonbasestar/deploy_kos:20190111
-#    - target: aws
-#      url: awssssssssss
-#      name: awssssss/deploy_backend:20190111
+package:
+  kos_sample_image:
+    dockerimage: springboot # 박스에 선언된 것 아니면 docker.io에서도 검색
+    args:
+      - JDK_VERSION=1.8
+      - GRADLE_VERSION=5.0
+      - APP_VERSION=20190111
+    snap_in:
+      kos_pkg: /application/app.jar
+    entrypoint: ["java","-Djava.security.egd=file:/dev/./urandom","-jar","/application/app.jar"]
+    push_to:
+      - target: docker
+        url: hub.docker.com
+        name: scriptonbasestar/deploy_${project_name}:${project_version}
+  kos_sample_tar: # 새 디렉토리를 root로 보고 파일을 넣고 압축
+    compress_name: kos_sample_tar.tar.gz
+    compress_type: tar.gz
+    snap_in:
+      kos_pkg: app.jar
+    add:
+      - copy_in:
+          source: source_root
+          from: .
+          to: ./test/kos/.
+      - copy_in:
+          source: pass_package
+          from: /node_nodules
+          to: /node_modules
