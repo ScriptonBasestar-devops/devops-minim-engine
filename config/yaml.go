@@ -2,10 +2,10 @@ package config
 
 import (
 	"fmt"
+	"github.com/cemacs/devops-engine/util"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"strings"
-	"util"
 )
 
 type CopySource struct {

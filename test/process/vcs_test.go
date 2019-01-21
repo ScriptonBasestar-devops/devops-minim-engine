@@ -1,8 +1,9 @@
-package vcs
+package process__test
 
 import (
-	"config"
 	"fmt"
+	"github.com/cemacs/devops-engine/config"
+	"github.com/cemacs/devops-engine/process"
 	"path"
 	"testing"
 )
@@ -12,13 +13,13 @@ var branch = "master"
 
 func TestClone(t *testing.T) {
 	//clone
-	result := clone(path.Join(workRoot, "testvcs"), "https://github.com/cemacs-tv/devops-MinG.git", branch)
+	result := process.Clone(path.Join(workRoot, "testvcs"), "https://github.com/cemacs-tv/devops-MinG.git", branch)
 	fmt.Println(result)
 
 	//work work work
 
 	//fetch clean reset
-	result = latest(path.Join(workRoot, "testvcs"), branch)
+	result = process.Latest(path.Join(workRoot, "testvcs"), branch)
 	fmt.Println(result)
 }
 

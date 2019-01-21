@@ -1,6 +1,6 @@
 # ====== Java.gitignore ======
 # Compiled class file
-*.class
+out/test/classes/cemacs/kos/KosApplicationTests.class
 
 # Log file
 *.log

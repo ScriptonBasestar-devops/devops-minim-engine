@@ -4,6 +4,7 @@ import (
 	"archive/tar"
 	"bytes"
 	"fmt"
+	"github.com/cemacs/devops-engine/util"
 	"github.com/docker/cli/cli/command/image/build"
 	"github.com/docker/docker/pkg/archive"
 	"github.com/docker/docker/pkg/stringid"
@@ -11,7 +12,6 @@ import (
 	"io/ioutil"
 	"os"
 	"time"
-	"util"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/client"

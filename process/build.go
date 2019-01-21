@@ -4,8 +4,9 @@ import (
 	"archive/tar"
 	"bufio"
 	"compress/gzip"
-	"config"
 	"fmt"
+	"github.com/cemacs/devops-engine/config"
+	"github.com/cemacs/devops-engine/util"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
@@ -13,9 +14,7 @@ import (
 	"io"
 	"log"
 	"os"
-	"path"
 	"strings"
-	"util"
 )
 
 func addFile(tw *tar.Writer, path string) error {

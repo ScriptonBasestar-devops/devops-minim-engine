@@ -2,19 +2,18 @@ package process_test
 
 import (
 	"fmt"
+	"github.com/cemacs/devops-engine/process"
+	"github.com/cemacs/devops-engine/util"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/filters"
 	"github.com/docker/docker/client"
-	"github.com/docker/docker/pkg/archive"
 	"golang.org/x/net/context"
 	"io"
 	"io/ioutil"
 	"os"
 	"path"
-	"prepare"
 	"testing"
-	"util"
 )
 
 func newClient() *client.Client {

@@ -2,23 +2,12 @@ package process
 
 import (
 	"fmt"
+	"github.com/cemacs/devops-engine/util"
 	"github.com/docker/docker/api/types/volume"
 	"github.com/docker/docker/client"
 	"golang.org/x/net/context"
-	"util"
 )
 
-/*
-cache:
-#  grp:
-#  usr:
-  prj:
-    m2: ${USER_HOME}/.m2
-    gradle: ${USER_HOME}/.gradle
-    npm: ${WORK_ROOT}/app/node_modules
-  tmp:
-    pass_package: # no default
-*/
 type CacheType int
 
 const (
@@ -40,24 +29,21 @@ func cacheName(cacheType CacheType, middleName string, volumeName string) string
 	return fmt.Sprintf("%s-%s-%s", cacheType.String(), middleName, volumeName)
 }
 
-func CacheCreate(cacheType CacheType, middleName string, volumeName string) string {
-	cli, err := client.NewClientWithOpts(client.WithVersion("1.39"), client.WithScheme("http"))
-	util.OMG(err)
+func CacheCreate(cli client.APIClient, cacheType CacheType, middleName string, volumeName string) string {
 	ctx := context.Background()
-
 	v, err := cli.VolumeCreate(ctx, volume.VolumeCreateBody{
 		Name: cacheName(cacheType, middleName, volumeName),
+		Labels: map[string]string{
+			"build_no":     "prj",
+			"project_name": "prj",
+		},
 	})
 	util.OMG(err)
-	//fmt.Println(v.Name)
 	return v.Name
 }
 
-func CacheRemove(vid string) {
-	cli, err := client.NewClientWithOpts(client.WithVersion("1.39"), client.WithScheme("http"))
-	util.OMG(err)
+func CacheRemove(cli client.APIClient, vid string) {
 	ctx := context.Background()
-
-	err = cli.VolumeRemove(ctx, vid, true)
+	err := cli.VolumeRemove(ctx, vid, true)
 	util.OMG(err)
 }

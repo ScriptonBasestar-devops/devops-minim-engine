@@ -1,11 +1,11 @@
-package config_test
+package unit_t_test
 
 import (
-	"config"
 	"fmt"
+	"github.com/cemacs/devops-engine/config"
+	"github.com/cemacs/devops-engine/util"
 	"gopkg.in/yaml.v2"
 	"testing"
-	"util"
 )
 
 func YamlConfigSample() config.YamlConfig {
